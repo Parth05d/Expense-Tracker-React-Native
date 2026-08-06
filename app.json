@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "GuiltFree Expense Tracker",
+    "slug": "parth",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.expensetracker.guiltfree"
+    },
+    "android": {
+      "package": "com.expensetracker.guiltfree"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9c10c214-53de-44f6-9446-08f579106096"
+      }
+    },
+    "owner": "parth0504s-team"
+  }
+}
