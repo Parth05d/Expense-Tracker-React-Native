@@ -7,3 +7,11 @@ yarn-debug.*
 yarn-error.*
 *.log
 .env
+.env.*
+debug_profiles.js
+debug_*.js
+*.jks
+*.keystore
+*.p8
+*.p12
+*.pem
