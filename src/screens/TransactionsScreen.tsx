@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Header } from '../components/common/Header';
 import { TransactionFilters, FilterType } from '../components/transactions/TransactionFilters';
 import { TransactionRow } from '../components/transactions/TransactionRow';
+import { CustomRefreshControl } from '../components/common/CustomRefreshControl';
 import { Transaction } from '../types';
 import { useExpenseStore } from '../store/useExpenseStore';
 import { DarkTheme, LightTheme, Spacing } from '../constants/theme';
@@ -23,8 +24,21 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
   const transactions = useExpenseStore((state) => state.transactions);
   const categories = useExpenseStore((state) => state.categories);
   const deleteTransaction = useExpenseStore((state) => state.deleteTransaction);
+  const splits = useExpenseStore((state) => state.splits);
+  const userId = useExpenseStore((state) => state.userId);
 
   const theme = isDarkMode ? DarkTheme : LightTheme;
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    const storeUserId = useExpenseStore.getState().userId;
+    await useExpenseStore.getState().processSyncQueue();
+    if (storeUserId) {
+      await useExpenseStore.getState().fetchInitialData(storeUserId);
+    }
+    setRefreshing(false);
+  }, []);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,12 +81,38 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
   // Compute total for filtered view
   const filteredTotal = useMemo(() => {
     return filteredTransactions.reduce((sum, tx) => {
-      return tx.type === 'income' ? sum + tx.amount : sum - tx.amount;
+      let amount = tx.amount;
+      if (tx.groupId && tx.splitType !== 'none' && userId) {
+        const txSplits = splits.filter(s => s.transactionId === tx.id);
+        if (txSplits.length > 0) {
+          const mySplit = txSplits.find(s => s.userId === userId);
+          amount = mySplit ? mySplit.amount : 0;
+        }
+      }
+      return tx.type === 'income' ? sum + amount : sum - amount;
     }, 0);
-  }, [filteredTransactions]);
+  }, [filteredTransactions, splits, userId]);
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
+      {/* Ambient Depth Orbs */}
+      <View
+        style={[
+          styles.ambientOrbTopRight,
+          {
+            backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.16)' : 'rgba(16, 185, 129, 0.1)',
+          },
+        ]}
+      />
+      <View
+        style={[
+          styles.ambientOrbLeftCenter,
+          {
+            backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.14)' : 'rgba(124, 58, 237, 0.08)',
+          },
+        ]}
+      />
+
       <Header title="All Transactions" subtitle="Activity & History" onPressProfile={onPressProfile} />
 
       {/* Filters & Search */}
@@ -85,7 +125,7 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
         onSelectCategory={setSelectedCategoryId}
       />
 
-      {/* Summary of matching records */}
+      {/* Summary Bar */}
       <View style={styles.summaryBar}>
         <Text style={[styles.summaryCount, { color: theme.textMuted }]}>
           {filteredTransactions.length} {filteredTransactions.length === 1 ? 'transaction' : 'transactions'}
@@ -101,12 +141,13 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
       </View>
 
       {/* Date-Grouped Transaction List */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <CustomRefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         contentContainerStyle={styles.listContent}
       >
         {groupedSections.length === 0 ? (
-          <View style={[styles.emptyContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.emptyContainer, { backgroundColor: theme.cardGlass, borderColor: theme.glassHighlightTop }]}>
             <Text style={[styles.emptyTitle, { color: theme.text }]}>
               No Transactions Found
             </Text>
@@ -134,7 +175,7 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
             </View>
           ))
         )}
-      </ScrollView>
+      </CustomRefreshControl>
     </View>
   );
 };
@@ -142,6 +183,26 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  ambientOrbTopRight: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    pointerEvents: 'none',
+  },
+  ambientOrbLeftCenter: {
+    position: 'absolute',
+    top: 300,
+    left: -70,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    pointerEvents: 'none',
   },
   summaryBar: {
     flexDirection: 'row',

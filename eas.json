@@ -3,9 +3,22 @@
     "version": ">= 14.0.0"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://hokbvlpwezgqdmneosuv.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhva2J2bHB3ZXpncWRtbmVvc3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNjc1OTYsImV4cCI6MjEwMTk0MzU5Nn0.XiXVixojHWP7qD2FJ8hE2rDUrKwG1Jwaau925czdtT4",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "552579291006-u1jcq504lua5agjpr0hdda4820cjvs95.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "552579291006-9eki5ompbmghr3j6hlbq151lr6atgqjo.apps.googleusercontent.com"
       }
     },
     "production": {}

@@ -5,6 +5,7 @@ import { Transaction } from '../../types';
 import { useExpenseStore } from '../../store/useExpenseStore';
 import { DarkTheme, LightTheme, Spacing, BorderRadius } from '../../constants/theme';
 import { formatCurrency } from '../../utils/currency';
+import { formatTimeWithTimezone } from '../../utils/dateHelpers';
 import { CategoryBadge } from '../common/CategoryBadge';
 
 interface TransactionRowProps {
@@ -24,13 +25,27 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
   const currency = useExpenseStore((state) => state.settings.currency);
   const categories = useExpenseStore((state) => state.categories);
   const accounts = useExpenseStore((state) => state.accounts);
+  const splits = useExpenseStore((state) => state.splits);
+  const userId = useExpenseStore((state) => state.userId);
 
   const theme = isDarkMode ? DarkTheme : LightTheme;
 
   const category = categories.find((c) => c.id === transaction.categoryId);
   const account = accounts.find((a) => a.id === transaction.accountId);
   const isIncome = transaction.type === 'income';
-  const formattedAmount = `${isIncome ? '+' : '-'}${formatCurrency(transaction.amount, currency)}`;
+  let displayAmount = transaction.amount;
+  let isSplit = false;
+
+  if (transaction.groupId && transaction.splitType !== 'none' && userId) {
+    const txSplits = splits.filter(s => s.transactionId === transaction.id);
+    if (txSplits.length > 0) {
+      const mySplit = txSplits.find(s => s.userId === userId);
+      displayAmount = mySplit ? mySplit.amount : 0;
+      isSplit = true;
+    }
+  }
+
+  const formattedAmount = `${isIncome ? '+' : '-'}${formatCurrency(displayAmount, currency)}`;
 
   return (
     <TouchableOpacity
@@ -67,6 +82,14 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
                 </Text>
               </>
             )}
+            {transaction.createdAt && (
+              <>
+                <Text style={[styles.dot, { color: theme.textDim }]}>•</Text>
+                <Text numberOfLines={1} style={[styles.subtitle, { color: theme.textDim }]}>
+                  {formatTimeWithTimezone(transaction.createdAt)}
+                </Text>
+              </>
+            )}
           </View>
         </View>
       </View>
@@ -80,6 +103,11 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
         >
           {formattedAmount}
         </Text>
+        {isSplit && (
+          <Text style={{ fontSize: 10, color: theme.primary, marginTop: 2, fontWeight: '600' }}>
+            Your Share
+          </Text>
+        )}
 
         {showActions && (
           <View style={styles.actionButtons}>

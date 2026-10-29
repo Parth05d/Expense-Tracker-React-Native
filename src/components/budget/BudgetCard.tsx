@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Edit2, AlertCircle, CheckCircle } from 'lucide-react-native';
 import { Budget, Category } from '../../types';
 import { useExpenseStore } from '../../store/useExpenseStore';
-import { DarkTheme, LightTheme, Spacing, BorderRadius } from '../../constants/theme';
+import { DarkTheme, LightTheme, Spacing, BorderRadius, ShadowPresets } from '../../constants/theme';
 import { formatCurrency } from '../../utils/currency';
 import { CategoryBadge } from '../common/CategoryBadge';
 import { ProgressBar } from '../common/ProgressBar';
@@ -41,11 +41,17 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({
       style={[
         styles.card,
         {
-          backgroundColor: theme.surface,
-          borderColor: isOver ? theme.destructiveDim : theme.border,
+          backgroundColor: theme.cardGlass,
+          borderColor: isOver ? theme.destructive : theme.borderSubtle,
+          borderTopColor: isOver ? theme.destructive : theme.glassHighlightTop,
+          borderLeftColor: theme.glassHighlightLeft,
+          ...ShadowPresets.glass,
         },
       ]}
     >
+      {/* Specular Top Sheen */}
+      <View style={styles.glassSheenLine} />
+
       {/* Top row: Category Icon, Name, and Edit trigger */}
       <View style={styles.topRow}>
         <View style={styles.left}>
@@ -120,6 +126,17 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
     gap: Spacing.sm,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  glassSheenLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.28)',
+    zIndex: 10,
   },
   topRow: {
     flexDirection: 'row',

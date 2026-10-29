@@ -30,6 +30,9 @@ export const NumberPad: React.FC<NumberPadProps> = ({
       {rows.map((row, rowIndex) => (
         <View key={`row-${rowIndex}`} style={styles.row}>
           {row.map((item) => {
+            const keyBg = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9';
+            const keyBorder = isDarkMode ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.08)';
+
             if (item === 'delete') {
               return (
                 <TouchableOpacity
@@ -37,7 +40,7 @@ export const NumberPad: React.FC<NumberPadProps> = ({
                   activeOpacity={0.7}
                   onPress={onDelete}
                   onLongPress={onClear}
-                  style={[styles.key, { backgroundColor: theme.secondary }]}
+                  style={[styles.key, { backgroundColor: keyBg, borderColor: keyBorder }]}
                 >
                   <Delete size={22} color={theme.text} />
                 </TouchableOpacity>
@@ -49,7 +52,7 @@ export const NumberPad: React.FC<NumberPadProps> = ({
                 key={item}
                 activeOpacity={0.7}
                 onPress={() => onPressDigit(item)}
-                style={[styles.key, { backgroundColor: theme.secondary }]}
+                style={[styles.key, { backgroundColor: keyBg, borderColor: keyBorder }]}
               >
                 <Text style={[styles.keyText, { color: theme.text }]}>
                   {item}
@@ -76,13 +79,14 @@ const styles = StyleSheet.create({
   },
   key: {
     flex: 1,
-    height: 54,
-    borderRadius: BorderRadius.lg,
+    height: 56,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
   keyText: {
-    fontSize: 22,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
   },
 });

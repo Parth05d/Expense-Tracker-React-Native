@@ -18,6 +18,7 @@ import { CURRENCY_CONFIGS, formatCurrency } from '../../utils/currency';
 import { getCurrentYearMonth } from '../../utils/dateHelpers';
 import { CategoryBadge } from '../common/CategoryBadge';
 import { Button } from '../common/Button';
+import { showGlassAlert } from '../common/GlassAlert';
 
 interface EditBudgetModalProps {
   visible: boolean;
@@ -59,7 +60,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
   const handleSave = () => {
     const numericAmount = parseFloat(amountStr);
     if (isNaN(numericAmount) || numericAmount < 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid budget amount.');
+      showGlassAlert('Invalid Amount', 'Please enter a valid budget amount.', undefined, 'error');
       return;
     }
 
@@ -84,7 +85,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
       >
         <TouchableOpacity activeOpacity={1} style={styles.backdrop} onPress={onClose} />
 
-        <View style={[styles.dialog, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.dialog, { backgroundColor: isDarkMode ? '#0F172A' : '#FFFFFF', borderColor: theme.border }]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>

@@ -35,20 +35,35 @@ export function formatReadableDate(dateString: string): string {
   });
 }
 
+export function formatTimeWithTimezone(isoString?: string): string {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 export interface GroupedTransactions {
   dateLabel: string;
   isoDate: string;
   transactions: Transaction[];
 }
 
-export function groupTransactionsByDate(transactions: Transaction[]): GroupedTransactions[] {
-  // Sort descending by date, then by creation
-  const sorted = [...transactions].sort((a, b) => {
+export function sortTransactionsDesc(transactions: Transaction[]): Transaction[] {
+  return [...transactions].sort((a, b) => {
     if (b.date !== a.date) {
       return b.date.localeCompare(a.date);
     }
     return (b.createdAt || '').localeCompare(a.createdAt || '');
   });
+}
+
+export function groupTransactionsByDate(transactions: Transaction[]): GroupedTransactions[] {
+  // Sort descending by date, then by creation
+  const sorted = sortTransactionsDesc(transactions);
 
   const map = new Map<string, Transaction[]>();
 

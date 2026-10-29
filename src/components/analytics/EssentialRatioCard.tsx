@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: 'hidden',
     flexDirection: 'row',
-    backgroundColor: '#272A35',
   },
   splitBarEssential: {
     height: '100%',

@@ -12,6 +12,7 @@ export interface Category {
   type: TransactionType;
   isEssential: boolean; // Essential (rent, groceries) vs Discretionary (entertainment, dining out)
   isPreset: boolean;
+  allocationPercent?: number; // Target percentage allocation of monthly income
 }
 
 export interface Account {
@@ -35,7 +36,40 @@ export interface Transaction {
   isBusiness?: boolean;
   isRecurring?: boolean;
   recurrenceRule?: 'weekly' | 'monthly' | 'yearly';
+  groupId?: string; // Phase 7: Null if personal
+  splitType?: 'equal' | 'percentage' | 'custom' | 'none'; // Phase 7
+  paidBy?: string; // Phase 7: user UUID
   createdAt: string;
+}
+
+// Phase 7: Family Groups & Splitwise Logic
+export interface Group {
+  id: string;
+  name: string;
+  type: 'shared' | 'family';
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface GroupMember {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: 'admin' | 'adult' | 'teen' | 'child';
+  joinedAt: string;
+  // Hydrated field from Profiles for UI convenience
+  profile?: {
+    email: string;
+    fullName: string;
+  };
+}
+
+export interface TransactionSplit {
+  id: string;
+  transactionId: string;
+  userId: string;
+  amount: number;
+  percentage?: number;
 }
 
 export interface Budget {
@@ -54,28 +88,46 @@ export interface CurrencyConfig {
   decimalPlaces: number;
 }
 
+export interface CustomSalaryEvent {
+  id: string;
+  date: string; // ISO YYYY-MM-DD
+  amount: number;
+  description: string;
+}
+
 export interface UserSettings {
   userName: string;
+  avatarUrl?: string;
   currency: CurrencyCode | string; // Currency code e.g. 'INR', 'USD', 'EUR', 'GBP'
   isDarkMode: boolean;
   safetyBufferPercent: number; // e.g. 10 for 10%
   safetyBufferPercentage?: number;
   monthlyIncomeTarget?: number;
   monthlyIncome?: number;
-  paycheckFrequency?: 'monthly' | 'biweekly' | 'weekly';
+  paycheckFrequency?: 'monthly' | 'biweekly' | 'weekly' | 'custom';
+  payCycle?: 'monthly' | 'biweekly' | 'weekly' | 'custom';
+  salaryDayOfMonth?: number; // 1 to 31 (e.g. 1st or 15th of month)
+  salaryDayOfMonth2?: number; // 1 to 31 (e.g. 15th or 25th of month for bi-weekly)
+  salaryDayOfWeek?: number; // 0 (Sun) to 6 (Sat), e.g. 5 for Friday
   nextPaycheckDate?: string;
+  customSalaryEvents?: CustomSalaryEvent[];
   notificationsEnabled?: boolean;
+  incomeAllocations?: Record<string, number>; // Maps categoryId -> percentage integer (e.g. { cat_1: 30, cat_2: 20 })
 }
 
-export interface GuiltFreeMetrics {
-  totalMonthlyBudget: number;
-  essentialSpent: number;
-  discretionarySpent: number;
-  committedUpcomingBills: number;
-  safetyBufferAmount: number;
-  guiltFreeRemaining: number;
-  safeToSpendPerDay: number;
-  daysRemainingInMonth: number;
-  percentageUsed: number;
-  status: 'safe' | 'caution' | 'exhausted';
+export type ReminderType = 'bill_payment' | 'emi' | 'sip' | 'money_receivable' | 'subscription' | 'personal' | 'other';
+
+export interface Reminder {
+  id: string;
+  userId?: string;
+  title: string;
+  amount: number;
+  type: ReminderType;
+  dueDate: string; // ISO format: YYYY-MM-DD
+  categoryId?: string;
+  note?: string;
+  isCompleted: boolean;
+  recurringPeriod?: 'none' | 'weekly' | 'monthly' | 'yearly';
+  notificationId?: string;
+  createdAt: string;
 }

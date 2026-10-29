@@ -4,7 +4,7 @@ import { Transaction } from '../../types';
 import { useExpenseStore } from '../../store/useExpenseStore';
 import { DarkTheme, LightTheme, Spacing, BorderRadius } from '../../constants/theme';
 import { formatCurrency } from '../../utils/currency';
-import { formatReadableDate } from '../../utils/dateHelpers';
+import { formatReadableDate, formatTimeWithTimezone, sortTransactionsDesc } from '../../utils/dateHelpers';
 import { CategoryBadge } from '../common/CategoryBadge';
 
 interface RecentTransactionsFeedProps {
@@ -22,11 +22,13 @@ export const RecentTransactionsFeed: React.FC<RecentTransactionsFeedProps> = ({
   const currency = useExpenseStore((state) => state.settings.currency);
   const transactions = useExpenseStore((state) => state.transactions);
   const categories = useExpenseStore((state) => state.categories);
+  const splits = useExpenseStore((state) => state.splits);
+  const userId = useExpenseStore((state) => state.userId);
 
   const theme = isDarkMode ? DarkTheme : LightTheme;
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
-  const recentTxList = transactions.slice(0, limit);
+  const recentTxList = sortTransactionsDesc(transactions).slice(0, limit);
 
   return (
     <View style={styles.container}>
@@ -56,7 +58,20 @@ export const RecentTransactionsFeed: React.FC<RecentTransactionsFeedProps> = ({
           {recentTxList.map((tx) => {
             const category = categoryMap.get(tx.categoryId);
             const isIncome = tx.type === 'income';
-            const formattedAmount = `${isIncome ? '+' : '-'}${formatCurrency(tx.amount, currency)}`;
+            
+            let displayAmount = tx.amount;
+            let isSplit = false;
+
+            if (tx.groupId && tx.splitType !== 'none' && userId) {
+              const txSplits = splits.filter(s => s.transactionId === tx.id);
+              if (txSplits.length > 0) {
+                const mySplit = txSplits.find(s => s.userId === userId);
+                displayAmount = mySplit ? mySplit.amount : 0;
+                isSplit = true;
+              }
+            }
+
+            const formattedAmount = `${isIncome ? '+' : '-'}${formatCurrency(displayAmount, currency)}`;
 
             return (
               <TouchableOpacity
@@ -82,19 +97,26 @@ export const RecentTransactionsFeed: React.FC<RecentTransactionsFeedProps> = ({
                       {tx.note || category?.name || (isIncome ? 'Income' : 'Expense')}
                     </Text>
                     <Text style={[styles.txSubtitle, { color: theme.textMuted }]}>
-                      {category?.name || 'General'} • {formatReadableDate(tx.date)}
+                      {category?.name || 'General'} • {formatReadableDate(tx.date)} {tx.createdAt ? `• ${formatTimeWithTimezone(tx.createdAt)}` : ''}
                     </Text>
                   </View>
                 </View>
 
-                <Text
-                  style={[
-                    styles.txAmount,
-                    { color: isIncome ? theme.primary : theme.text },
-                  ]}
-                >
-                  {formattedAmount}
-                </Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text
+                    style={[
+                      styles.txAmount,
+                      { color: isIncome ? theme.primary : theme.text },
+                    ]}
+                  >
+                    {formattedAmount}
+                  </Text>
+                  {isSplit && (
+                    <Text style={{ fontSize: 10, color: theme.primary, marginTop: 2, fontWeight: '600' }}>
+                      Your Share
+                    </Text>
+                  )}
+                </View>
               </TouchableOpacity>
             );
           })}

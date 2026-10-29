@@ -1,23 +1,49 @@
 {
   "expo": {
-    "name": "GuiltFree Expense Tracker",
+    "name": "Pocket Vault",
     "slug": "parth",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.expensetracker.guiltfree"
+      "bundleIdentifier": "com.pocketvault.app"
     },
     "android": {
-      "package": "com.expensetracker.guiltfree"
+      "package": "com.pocketvault.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "extra": {
       "eas": {
         "projectId": "9c10c214-53de-44f6-9446-08f579106096"
       }
     },
-    "owner": "parth0504s-team"
+    "owner": "parth0504s-team",
+    "plugins": [
+      "@react-native-google-signin/google-signin",
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6366F1"
+        }
+      ]
+    ]
   }
 }

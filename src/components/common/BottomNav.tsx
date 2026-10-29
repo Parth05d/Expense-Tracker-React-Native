@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
-import { Home, ListOrdered, Plus, PieChart, User } from 'lucide-react-native';
-import { DarkTheme, LightTheme, Spacing, BorderRadius } from '../../constants/theme';
+import React, { useRef } from 'react';
+import { View, StyleSheet, TouchableWithoutFeedback, Animated, Platform, Text } from 'react-native';
+import { Home, ListOrdered, Plus, BarChart2, Users } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { DarkTheme, LightTheme, ShadowPresets } from '../../constants/theme';
 import { useExpenseStore } from '../../store/useExpenseStore';
 
-export type TabScreen = 'home' | 'transactions' | 'budget' | 'profile';
+export type TabScreen = 'home' | 'transactions' | 'analytics' | 'groups' | 'budget' | 'profile';
 
 interface BottomNavProps {
   currentTab: TabScreen;
@@ -19,125 +20,171 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 }) => {
   const isDarkMode = useExpenseStore((state) => state.settings.isDarkMode);
   const theme = isDarkMode ? DarkTheme : LightTheme;
+  const fabScale = useRef(new Animated.Value(1)).current;
 
-  const tabs: { id: TabScreen; label: string; icon: any }[] = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'transactions', label: 'Activity', icon: ListOrdered },
-    { id: 'budget', label: 'Budgets', icon: PieChart },
-    { id: 'profile', label: 'Profile', icon: User },
-  ];
+  const handleFabPressIn = () => {
+    Animated.spring(fabScale, {
+      toValue: 0.9,
+      useNativeDriver: true,
+      speed: 30,
+      bounciness: 4,
+    }).start();
+  };
 
-  return (
-    <View style={[styles.wrapper, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
-      <View style={styles.container}>
-        {/* Left tabs: Home, Transactions */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => onSelectTab('home')}
-          style={styles.tabButton}
-        >
-          <Home
-            size={22}
-            color={currentTab === 'home' ? theme.primary : theme.textMuted}
-            strokeWidth={currentTab === 'home' ? 2.5 : 2}
-          />
-          {currentTab === 'home' && (
-            <View style={[styles.activeDot, { backgroundColor: theme.primary }]} />
-          )}
-        </TouchableOpacity>
+  const handleFabPressOut = () => {
+    Animated.spring(fabScale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 20,
+      bounciness: 8,
+    }).start();
+  };
 
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => onSelectTab('transactions')}
-          style={styles.tabButton}
-        >
-          <ListOrdered
-            size={22}
-            color={currentTab === 'transactions' ? theme.primary : theme.textMuted}
-            strokeWidth={currentTab === 'transactions' ? 2.5 : 2}
-          />
-          {currentTab === 'transactions' && (
-            <View style={[styles.activeDot, { backgroundColor: theme.primary }]} />
-          )}
-        </TouchableOpacity>
-
-        {/* Center Floating Action Button: Add Transaction */}
-        <View style={styles.centerFabContainer}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={onPressAdd}
+  const renderTabItem = (id: TabScreen, label: string, IconComponent: any) => {
+    const isActive = currentTab === id;
+    return (
+      <TouchableWithoutFeedback key={id} onPress={() => onSelectTab(id)}>
+        <View style={styles.tabButton}>
+          <View
             style={[
-              styles.fabButton,
-              {
-                backgroundColor: theme.primary,
-                shadowColor: theme.primary,
+              styles.iconWrapper,
+              isActive && {
+                backgroundColor: isDarkMode ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.12)',
+                borderColor: theme.primary,
               },
             ]}
           >
-            <Plus size={28} color="#FFFFFF" strokeWidth={3} />
-          </TouchableOpacity>
+            <IconComponent
+              size={20}
+              color={isActive ? theme.primary : theme.textMuted}
+              strokeWidth={isActive ? 2.4 : 1.8}
+            />
+          </View>
+          <Text
+            style={[
+              styles.tabLabel,
+              { color: isActive ? theme.primary : theme.textMuted, fontWeight: isActive ? '700' : '500' },
+            ]}
+          >
+            {label}
+          </Text>
         </View>
+      </TouchableWithoutFeedback>
+    );
+  };
 
-        {/* Right tabs: Budget, Profile */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => onSelectTab('budget')}
-          style={styles.tabButton}
-        >
-          <PieChart
-            size={22}
-            color={currentTab === 'budget' ? theme.primary : theme.textMuted}
-            strokeWidth={currentTab === 'budget' ? 2.5 : 2}
-          />
-          {currentTab === 'budget' && (
-            <View style={[styles.activeDot, { backgroundColor: theme.primary }]} />
-          )}
-        </TouchableOpacity>
+  return (
+    <View style={styles.outerContainer}>
+      <View
+        style={[
+          styles.floatingGlassDock,
+          {
+            backgroundColor: isDarkMode ? '#0F172A' : '#FFFFFF',
+            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.1)',
+            borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.32)' : 'rgba(255, 255, 255, 0.95)',
+          },
+        ]}
+      >
+        {/* Top Sheen Reflection */}
+        <View
+          style={[
+            styles.glassSheenLine,
+            { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.8)' },
+          ]}
+        />
 
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => onSelectTab('profile')}
-          style={styles.tabButton}
-        >
-          <User
-            size={22}
-            color={currentTab === 'profile' ? theme.primary : theme.textMuted}
-            strokeWidth={currentTab === 'profile' ? 2.5 : 2}
-          />
-          {currentTab === 'profile' && (
-            <View style={[styles.activeDot, { backgroundColor: theme.primary }]} />
-          )}
-        </TouchableOpacity>
+        <View style={styles.dockContent}>
+          {renderTabItem('home', 'Home', Home)}
+          {renderTabItem('transactions', 'Bills', ListOrdered)}
+
+          {/* Floating Center Action Button */}
+          <View style={styles.centerFabContainer}>
+            <TouchableWithoutFeedback
+              onPressIn={handleFabPressIn}
+              onPressOut={handleFabPressOut}
+              onPress={onPressAdd}
+            >
+              <Animated.View style={{ transform: [{ scale: fabScale }] }}>
+                <LinearGradient
+                  colors={['#6366F1', '#4F46E5', '#4338CA']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.fabButton, ShadowPresets.glowPrimary]}
+                >
+                  <Plus size={26} color="#FFFFFF" strokeWidth={3} />
+                </LinearGradient>
+              </Animated.View>
+            </TouchableWithoutFeedback>
+          </View>
+
+          {renderTabItem('analytics', 'Stats', BarChart2)}
+          {renderTabItem('groups', 'Groups', Users)}
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    borderTopWidth: 1,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-    paddingTop: 8,
-    position: 'relative',
+  outerContainer: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 24 : 14,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    pointerEvents: 'box-none',
+    zIndex: 999,
   },
-  container: {
+  floatingGlassDock: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 30,
+    borderWidth: 1.5,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    position: 'relative',
+    overflow: 'visible',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  glassSheenLine: {
+    position: 'absolute',
+    top: 0,
+    left: 20,
+    right: 20,
+    height: 1.5,
+    borderRadius: 1,
+    zIndex: 2,
+  },
+  dockContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    height: 52,
-    paddingHorizontal: Spacing.sm,
+    height: 56,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
   },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 4,
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  tabLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    letterSpacing: 0.2,
   },
   centerFabContainer: {
     width: 60,
@@ -145,15 +192,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fabButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -28,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 8,
+    marginTop: -22,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
 });

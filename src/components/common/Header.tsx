@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { User, Bell } from 'lucide-react-native';
 import { DarkTheme, LightTheme, Spacing, BorderRadius } from '../../constants/theme';
 import { useExpenseStore } from '../../store/useExpenseStore';
+import { AvatarImage } from './AvatarImage';
 
 interface HeaderProps {
   title?: string;
@@ -19,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const isDarkMode = useExpenseStore((state) => state.settings.isDarkMode);
   const userName = useExpenseStore((state) => state.settings.userName);
+  const avatarUrl = useExpenseStore((state) => state.settings.avatarUrl);
   const theme = isDarkMode ? DarkTheme : LightTheme;
 
   const currentHour = new Date().getHours();
@@ -50,9 +51,9 @@ export const Header: React.FC<HeaderProps> = ({
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onPressProfile}
-            style={[styles.avatarButton, { backgroundColor: theme.secondary, borderColor: theme.border }]}
+            style={[styles.avatarButton, { backgroundColor: theme.secondary, borderColor: theme.primary }]}
           >
-            <User size={20} color={theme.text} />
+            <AvatarImage url={avatarUrl} size={40} fallbackColor={theme.secondary} iconColor={theme.text} />
           </TouchableOpacity>
         )}
       </View>
@@ -94,5 +95,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 21,
   },
 });

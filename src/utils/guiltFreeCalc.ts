@@ -1,10 +1,12 @@
-import { Transaction, Budget, Category, UserSettings, GuiltFreeMetrics } from '../types';
+import { Transaction, Budget, Category, UserSettings, GuiltFreeMetrics, TransactionSplit } from '../types';
 
 export function calculateGuiltFreeMetrics(
   transactions: Transaction[],
   budgets: Budget[],
   categories: Category[],
   settings: UserSettings,
+  userId: string | null,
+  splits: TransactionSplit[],
   currentDate: Date = new Date()
 ): GuiltFreeMetrics {
   const currentYearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -27,11 +29,24 @@ export function calculateGuiltFreeMetrics(
   let discretionarySpent = 0;
 
   currentMonthTransactions.forEach((t) => {
-    const category = categoryMap.get(t.categoryId);
-    if (category?.isEssential) {
-      essentialSpent += t.amount;
-    } else {
-      discretionarySpent += t.amount;
+    let personalAmount = t.amount;
+    
+    // If it's a split transaction, find the user's portion
+    if (t.groupId && t.splitType !== 'none' && userId) {
+      const txSplits = splits.filter(s => s.transactionId === t.id);
+      if (txSplits.length > 0) {
+        const mySplit = txSplits.find(s => s.userId === userId);
+        personalAmount = mySplit ? mySplit.amount : 0;
+      }
+    }
+
+    if (personalAmount > 0) {
+      const category = categoryMap.get(t.categoryId);
+      if (category?.isEssential) {
+        essentialSpent += personalAmount;
+      } else {
+        discretionarySpent += personalAmount;
+      }
     }
   });
 

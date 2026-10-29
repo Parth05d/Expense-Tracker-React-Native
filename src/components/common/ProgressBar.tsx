@@ -19,7 +19,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const isDarkMode = useExpenseStore((state) => state.settings.isDarkMode);
   const theme = isDarkMode ? DarkTheme : LightTheme;
 
-  const clamped = Math.min(100, Math.max(0, progress));
+  const safeProgress = isNaN(progress) ? 0 : progress;
+  const clamped = Math.min(100, Math.max(0, safeProgress));
 
   // Determine progress bar fill color
   let fillColor = theme.primary;
